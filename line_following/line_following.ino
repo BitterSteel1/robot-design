@@ -1,3 +1,8 @@
+#include <Wire.h>
+#include <MPU6050_light.h>
+
+MPU6050 mpu(Wire);
+
 // Define pin numbers
 uint8_t const IR_pins[] = {A8, A9, A10, A11, A12, A13, A14, A15};
 uint16_t sensorValues[8];
@@ -14,7 +19,8 @@ uint8_t const INB_2 = 22;
 float const line_kp = 0.0067; //5-54-60-65-70
 float const line_kd = 0.053; //0.018// 28//35// 
 float const line_ki = 0.0005;
-uint16_t const baseSpeed = 60;
+uint16_t baseSpeed = 60;
+uint16_t baseSpeed_offset_ramp = 5;
 
 int previousLineError = 0;
 int line_error;  //temporary use for checking the ir array           
@@ -32,6 +38,16 @@ void setup() {
 
     // Initialize Serial Monitor
     Serial.begin(9600);
+    
+    // Initialize Gyroscope
+    Wire.begin();
+    mpu.begin();
+    Serial.println("Do not move the robot. MPU6050 ready for calibration");
+    Serial.print(F("MPU6050 status: "));
+    Serial.println(F("Calculating offsets >>>"));
+    delay(1000);
+    mpu.calcGyroOffsets();
+    Serial.println("Done!\n");
 
     // Initialize motor driver
     initializeMotorDriver();
@@ -44,12 +60,30 @@ void setup() {
 }
 
 void loop() {
+    mpu.update();
+
+    Serial.print("Angle - Z: ");
+    Serial.println(int(mpu.getAngleZ()));
+    
+    delay(10);
+
+    // Move the conditional statements inside the loop function
+    if (mpu.getAngleZ() > 15) {
+        Serial.println("############## Robot is ascending");
+        baseSpeed += baseSpeed_offset_ramp;
+        // Perform actions for robot ascending
+    } else if (mpu.getAngleZ() < -15) {
+        Serial.println("############## Robot is descending");
+        baseSpeed -= baseSpeed_offset_ramp;
+        // Perform actions for robot descending
+    }
+
     pid_line_following();
     delay(30);
     find_junction();
 }
 
-// //////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function to get debug output of IR array
 void PIDLineDebug() {
     for (uint8_t i = 0; i < 8; i++) {
