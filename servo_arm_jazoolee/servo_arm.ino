@@ -16,33 +16,24 @@ void setup() {
   servo_oc.attach(12);
 }
 
-
-void servo_clockwise(Servo &servo, int angle,uint16_t duration){
-  servo.write(0);
-  delay(duration);
-  servo.write(angle);
-  delay(duration);
+void clockwise(Servo &servo, int angle) {
+ servo.write(angle);
 }
 
-void servo_counterclockwise(Servo &servo, int angle, uint16_t duration){
-  servo.write(angle);
-  delay(duration);
-  servo.write(0);
-  delay(duration);
+void counterCW(Servo &servo, int angle) {
+ servo.write(angle);
 }
 
 void loop() {
 
-  servo_clockwise(servo_oc, 180, 1000);
+  // clockwise(servo_ud , 180);
+  // delay(1000);
+  // counterCW(servo_ud , 0);
 
-  delay(5000);
-
-  servo_counterclockwise(servo_oc, 180, 1000);
-
-}
-
-
-  
+  clockwise(servo_oc , 0);
+  delay(1000);
+  counterCW(servo_oc , 180);
+  delay(1000);
 
   // Rotate CW slowly at 5 RPM
 	myStepper.setSpeed(10);
@@ -53,3 +44,5 @@ void loop() {
 	myStepper.setSpeed(10);
 	myStepper.step(-stepsPerRevolution);
 	delay(1000);
+
+}
